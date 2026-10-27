@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Davomat</title>
+    <!-- Telegram Web App Scripti -->
+    <script src="https://telegram.org"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--tg-theme-bg-color, #f4f4f9);
+            color: var(--tg-theme-text-color, #333);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 80%;
+            max-width: 350px;
+        }
+        h2 { color: #4CAF50; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+        .btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2 id="user-name">Salom!</h2>
+    <p>Bugungi sana: <span id="current-date"></span></p>
+    <p>Smart davomat tizimi orqali mavjudligingizni tasdiqlang.</p>
+    <button class="btn" id="checkin-btn">✅ Davomatdan o'tish</button>
+</div>
+
+<script>
+    // Telegram Web Appni ishga tushiramiz
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Ilovani to'liq ekranga ochish
+
+    // Foydalanuvchi ismini chiqarish
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        document.getElementById('user-name').innerText = "Salom, " + tg.initDataUnsafe.user.first_name + "!";
+    }
+
+    // Bugungi sanani ko'rsatish
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString();
+
+    // Tugma bosilganda botga ma'lumot qaytarish
+    document.getElementById('checkin-btn').addEventListener('click', () => {
+        const data = { action: "check_in", timestamp: new Date().toLocaleTimeString() };
+        tg.sendData(JSON.stringify(data)); // Botga ma'lumot yuborish
+        tg.close(); // Ilovani yopish
+    });
+</script>
+</body>
+</html>
