@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Davomat</title>
-    <!-- Telegram Web App Scripti -->
+    <!-- Telegram Web App rasmiy skripti -->
     <script src="https://telegram.org"></script>
     <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #f4f4f9);
+            --text-color: var(--tg-theme-text-color, #333);
+            --btn-color: var(--tg-theme-button-color, #248b1d);
+            --btn-text: var(--tg-theme-button-text-color, #ffffff);
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--tg-theme-bg-color, #f4f4f9);
-            color: var(--tg-theme-text-color, #333);
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -22,56 +28,92 @@
             background: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             text-align: center;
-            width: 80%;
-            max-width: 350px;
+            width: 85%;
+            max-width: 340px;
+            box-sizing: border-box;
         }
-        h2 { color: #4CAF50; margin-bottom: 10px; }
-        p { color: #666; font-size: 14px; }
+        h2 { color: #248b1d; margin-top: 0; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; line-height: 1.5; }
         .btn {
-            background-color: #4CAF50;
-            color: white;
+            background-color: var(--btn-color);
+            color: var(--btn-text);
             border: none;
-            padding: 12px 25px;
+            padding: 14px 20px;
             font-size: 16px;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             width: 100%;
             margin-top: 20px;
-            transition: 0.3s;
+            transition: background 0.3s, transform 0.1s;
         }
         .btn:active { transform: scale(0.98); }
+        /* Bloklarni yashirib turish uchun */
+        .hidden { display: none; }
+        .icon { font-size: 50px; margin-bottom: 15px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 id="user-name">Salom!</h2>
-    <p>Bugungi sana: <span id="current-date"></span></p>
-    <p>Smart davomat tizimi orqali mavjudligingizni tasdiqlang.</p>
-    <button class="btn" id="checkin-btn">✅ Davomatdan o'tish</button>
+    <!-- 1-BOSQICH: Kirish va Telefon raqam so'rash oynasi -->
+    <div id="auth-screen">
+        <span class="icon">🔐</span>
+        <h2>Tizimga kirish</h2>
+        <p>Smart Davomat platformasidan foydalanish uchun rasmiy Telegram telefon raqamingizni tasdiqlang.</p>
+        <button class="btn" id="login-btn">📱 Telefon raqamni tasdiqlash</button>
+    </div>
+
+    <!-- 2-BOSQICH: Asosiy Smart Davomat oynasi -->
+    <div id="main-screen" class="hidden">
+        <span class="icon">🎯</span>
+        <h2>Smart Davomat</h2>
+        <p>Xush kelibsiz, <strong id="user-name">Foydalanuvchi</strong>!</p>
+        <p>Bugungi sana: <span id="current-date"></span></p>
+        <p>Mavjudligingizni tasdiqlash uchun quyidagi yashil tugmani bosing.</p>
+        <button class="btn" id="checkin-btn">✅ Davomatdan o'tish</button>
+    </div>
 </div>
 
 <script>
-    // Telegram Web Appni ishga tushiramiz
     const tg = window.Telegram.WebApp;
     tg.expand(); // Ilovani to'liq ekranga ochish
 
-    // Foydalanuvchi ismini chiqarish
+    // Telegramdan foydalanuvchi ismini olish
+    let firstName = "Foydalanuvchi";
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        document.getElementById('user-name').innerText = "Salom, " + tg.initDataUnsafe.user.first_name + "!";
+        firstName = tg.initDataUnsafe.user.first_name;
     }
+    document.getElementById('user-name').innerText = firstName;
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('uz-UZ');
 
-    // Bugungi sanani ko'rsatish
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString();
+    const authScreen = document.getElementById('auth-screen');
+    const mainScreen = document.getElementById('main-screen');
 
-    // Tugma bosilganda botga ma'lumot qaytarish
+    // 1. Kirish tugmasi bosilganda: Telegramdan raqam so'rash
+    document.getElementById('login-btn').addEventListener('click', () => {
+        // Telegram Web App orqali telefon raqam so'rash funksiyasi (Agar foydalanuvchi ruxsat bersa)
+        tg.requestPhone((success) => {
+            if (success) {
+                // Raqam muvaffaqiyatli olindi -> Kirish oynasini yashirib, Asosiy oynani ochamiz
+                authScreen.classList.add('hidden');
+                mainScreen.classList.remove('hidden');
+            } else {
+                alert("Xatolik! Davomatdan o'tish uchun telefon raqamingizni tasdiqlashingiz shart.");
+            }
+        });
+    });
+
+    // 2. Davomat tugmasi bosilganda botga ma'lumot jo'natish
     document.getElementById('checkin-btn').addEventListener('click', () => {
-        const data = { action: "check_in", timestamp: new Date().toLocaleTimeString() };
-        tg.sendData(JSON.stringify(data)); // Botga ma'lumot yuborish
-        tg.close(); // Ilovani yopish
+        const data = { 
+            action: "check_in",
+            time: new Date().toLocaleTimeString('uz-UZ')
+        };
+        tg.sendData(JSON.stringify(data)); // Botga JSON yuborish
+        tg.close(); // Web Appni yopish
     });
 </script>
 </body>
