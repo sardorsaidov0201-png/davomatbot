@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Davomat</title>
-    <!-- Telegram Web App rasmiy skripti -->
     <script src="https://telegram.org"></script>
     <style>
         :root {
@@ -50,7 +49,6 @@
             transition: background 0.3s, transform 0.1s;
         }
         .btn:active { transform: scale(0.98); }
-        /* Bloklarni yashirib turish uchun */
         .hidden { display: none; }
         .icon { font-size: 50px; margin-bottom: 15px; display: block; }
     </style>
@@ -58,7 +56,7 @@
 <body>
 
 <div class="card">
-    <!-- 1-BOSQICH: Kirish va Telefon raqam so'rash oynasi -->
+    <!-- 1-BOSQICH: Kirish oynasi -->
     <div id="auth-screen">
         <span class="icon">🔐</span>
         <h2>Tizimga kirish</h2>
@@ -66,7 +64,7 @@
         <button class="btn" id="login-btn">📱 Telefon raqamni tasdiqlash</button>
     </div>
 
-    <!-- 2-BOSQICH: Asosiy Smart Davomat oynasi -->
+    <!-- 2-BOSQICH: Asosiy oynasi -->
     <div id="main-screen" class="hidden">
         <span class="icon">🎯</span>
         <h2>Smart Davomat</h2>
@@ -79,9 +77,9 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Ilovani to'liq ekranga ochish
+    tg.expand(); 
+    tg.ready(); // Telegramga ilova tayyorligini bildiramiz
 
-    // Telegramdan foydalanuvchi ismini olish
     let firstName = "Foydalanuvchi";
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         firstName = tg.initDataUnsafe.user.first_name;
@@ -92,28 +90,32 @@
     const authScreen = document.getElementById('auth-screen');
     const mainScreen = document.getElementById('main-screen');
 
-    // 1. Kirish tugmasi bosilganda: Telegramdan raqam so'rash
+    // Telefon raqam so'rash qismi
     document.getElementById('login-btn').addEventListener('click', () => {
-        // Telegram Web App orqali telefon raqam so'rash funksiyasi (Agar foydalanuvchi ruxsat bersa)
-        tg.requestPhone((success) => {
-            if (success) {
-                // Raqam muvaffaqiyatli olindi -> Kirish oynasini yashirib, Asosiy oynani ochamiz
-                authScreen.classList.add('hidden');
-                mainScreen.classList.remove('hidden');
-            } else {
-                alert("Xatolik! Davomatdan o'tish uchun telefon raqamingizni tasdiqlashingiz shart.");
-            }
-        });
+        // Agar Telegram ruxsat bermasa yoki kompyuterda sinalsa, muammo bo'lmasligi uchun tekshiramiz
+        if (tg.requestPhone) {
+            tg.requestPhone((success, response) => {
+                if (success) {
+                    authScreen.classList.add('hidden');
+                    mainScreen.classList.remove('hidden');
+                } else {
+                    alert("Ilovadan foydalanish uchun telefon raqamni tasdiqlash shart!");
+                }
+            });
+        } else {
+            // Agar requestPhone funksiyasi brauzerda ishlamasa, to'g'ridan-to'g'ri o'tkazib yuborish (Sinov rejimi uchun)
+            authScreen.classList.add('hidden');
+            mainScreen.classList.remove('hidden');
+        }
     });
 
-    // 2. Davomat tugmasi bosilganda botga ma'lumot jo'natish
     document.getElementById('checkin-btn').addEventListener('click', () => {
         const data = { 
             action: "check_in",
             time: new Date().toLocaleTimeString('uz-UZ')
         };
-        tg.sendData(JSON.stringify(data)); // Botga JSON yuborish
-        tg.close(); // Web Appni yopish
+        tg.sendData(JSON.stringify(data)); 
+        tg.close(); 
     });
 </script>
 </body>
