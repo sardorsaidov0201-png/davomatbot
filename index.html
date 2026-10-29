@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Davomat</title>
+    <!-- Telegram Web App rasmiy scripti -->
     <script src="https://telegram.org"></script>
     <style>
         :root {
@@ -36,7 +37,7 @@
         h2 { color: #248b1d; margin-top: 0; margin-bottom: 10px; }
         p { color: #666; font-size: 14px; line-height: 1.5; }
         
-        /* Raqam kiritish oynasi uslubi */
+        /* Raqam kiritish maydoni */
         .phone-input {
             width: 100%;
             padding: 12px;
@@ -74,7 +75,7 @@
 <body>
 
 <div class="card">
-    <!-- 1-BOSQICH: Kirish oynasi (Kiritish maydoni bilan) -->
+    <!-- 1-BOSQICH: Kirish oynasi -->
     <div id="auth-screen">
         <span class="icon">🔐</span>
         <h2>Tizimga kirish</h2>
@@ -83,7 +84,7 @@
         <button class="btn" id="login-btn">🔑 Tizimga kirish</button>
     </div>
 
-    <!-- 2-BOSQICH: Asosiy oynasi -->
+    <!-- 2-BOSQICH: Asosiy Smart Davomat oynasi -->
     <div id="main-screen" class="hidden">
         <span class="icon">🎯</span>
         <h2>Smart Davomat</h2>
@@ -100,6 +101,7 @@
     tg.expand(); 
     tg.ready();
 
+    // Telegramdan foydalanuvchi ismini olish
     let firstName = "Foydalanuvchi";
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         firstName = tg.initDataUnsafe.user.first_name;
@@ -118,29 +120,36 @@
     document.getElementById('login-btn').addEventListener('click', () => {
         kiritilganRaqam = phoneField.value.trim();
         
-        // Oddiy tekshiruv (Raqam uzunligi kamida 9 ta belgidan oshishi kerak)
+        // Raqam uzunligini tekshirish
         if (kiritilganRaqam.length < 9 || kiritilganRaqam === "+998") {
             alert("Iltimos, telefon raqamingizni to‘g‘ri kiriting!");
             return;
         }
 
-        // Ekranlarni almashtirish
+        // Vizual ravishda asosiy ekranga o'tkazish
         userPhoneSpan.innerText = kiritilganRaqam;
         authScreen.classList.add('hidden');
         mainScreen.classList.remove('hidden');
+
+        // Botga telefon raqam haqida JSON ma'lumot jo'natish
+        const loginData = {
+            action: "login_phone",
+            phone: kiritilganRaqam
+        };
+        tg.sendData(JSON.stringify(loginData));
     });
 
     // Davomatdan o'tish tugmasi bosilganda
     document.getElementById('checkin-btn').addEventListener('click', () => {
-        const data = { 
+        // Botga davomat haqida JSON ma'lumot jo'natish
+        const checkinData = { 
             action: "check_in",
             phone: kiritilganRaqam,
             time: new Date().toLocaleTimeString('uz-UZ')
         };
-        tg.sendData(JSON.stringify(data)); 
-        tg.close(); 
+        tg.sendData(JSON.stringify(checkinData)); 
+        tg.close(); // Ilovani avtomatik yopish
     });
 </script>
 </body>
 </html>
-
