@@ -35,6 +35,24 @@
         }
         h2 { color: #248b1d; margin-top: 0; margin-bottom: 10px; }
         p { color: #666; font-size: 14px; line-height: 1.5; }
+        
+        /* Raqam kiritish oynasi uslubi */
+        .phone-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            box-sizing: border-box;
+            margin-top: 15px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .phone-input:focus {
+            border-color: #248b1d;
+        }
+
         .btn {
             background-color: var(--btn-color);
             color: var(--btn-text);
@@ -56,12 +74,13 @@
 <body>
 
 <div class="card">
-    <!-- 1-BOSQICH: Kirish oynasi -->
+    <!-- 1-BOSQICH: Kirish oynasi (Kiritish maydoni bilan) -->
     <div id="auth-screen">
         <span class="icon">🔐</span>
         <h2>Tizimga kirish</h2>
-        <p>Smart Davomat platformasidan foydalanish uchun rasmiy Telegram telefon raqamingizni tasdiqlang.</p>
-        <button class="btn" id="login-btn">📱 Telefon raqamni tasdiqlash</button>
+        <p>Smart Davomat platformasidan foydalanish uchun telefon raqamingizni kiriting:</p>
+        <input type="tel" id="phone-field" class="phone-input" placeholder="+998901234567" value="+998">
+        <button class="btn" id="login-btn">🔑 Tizimga kirish</button>
     </div>
 
     <!-- 2-BOSQICH: Asosiy oynasi -->
@@ -69,6 +88,7 @@
         <span class="icon">🎯</span>
         <h2>Smart Davomat</h2>
         <p>Xush kelibsiz, <strong id="user-name">Foydalanuvchi</strong>!</p>
+        <p>Telefon: <span id="user-phone" style="font-weight: bold; color: #248b1d;"></span></p>
         <p>Bugungi sana: <span id="current-date"></span></p>
         <p>Mavjudligingizni tasdiqlash uchun quyidagi yashil tugmani bosing.</p>
         <button class="btn" id="checkin-btn">✅ Davomatdan o'tish</button>
@@ -78,7 +98,7 @@
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand(); 
-    tg.ready(); // Telegramga ilova tayyorligini bildiramiz
+    tg.ready();
 
     let firstName = "Foydalanuvchi";
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
@@ -89,29 +109,32 @@
 
     const authScreen = document.getElementById('auth-screen');
     const mainScreen = document.getElementById('main-screen');
+    const phoneField = document.getElementById('phone-field');
+    const userPhoneSpan = document.getElementById('user-phone');
 
-    // Telefon raqam so'rash qismi
+    let kiritilganRaqam = "";
+
+    // Kirish tugmasi bosilganda
     document.getElementById('login-btn').addEventListener('click', () => {
-        // Agar Telegram ruxsat bermasa yoki kompyuterda sinalsa, muammo bo'lmasligi uchun tekshiramiz
-        if (tg.requestPhone) {
-            tg.requestPhone((success, response) => {
-                if (success) {
-                    authScreen.classList.add('hidden');
-                    mainScreen.classList.remove('hidden');
-                } else {
-                    alert("Ilovadan foydalanish uchun telefon raqamni tasdiqlash shart!");
-                }
-            });
-        } else {
-            // Agar requestPhone funksiyasi brauzerda ishlamasa, to'g'ridan-to'g'ri o'tkazib yuborish (Sinov rejimi uchun)
-            authScreen.classList.add('hidden');
-            mainScreen.classList.remove('hidden');
+        kiritilganRaqam = phoneField.value.trim();
+        
+        // Oddiy tekshiruv (Raqam uzunligi kamida 9 ta belgidan oshishi kerak)
+        if (kiritilganRaqam.length < 9 || kiritilganRaqam === "+998") {
+            alert("Iltimos, telefon raqamingizni to‘g‘ri kiriting!");
+            return;
         }
+
+        // Ekranlarni almashtirish
+        userPhoneSpan.innerText = kiritilganRaqam;
+        authScreen.classList.add('hidden');
+        mainScreen.classList.remove('hidden');
     });
 
+    // Davomatdan o'tish tugmasi bosilganda
     document.getElementById('checkin-btn').addEventListener('click', () => {
         const data = { 
             action: "check_in",
+            phone: kiritilganRaqam,
             time: new Date().toLocaleTimeString('uz-UZ')
         };
         tg.sendData(JSON.stringify(data)); 
@@ -120,3 +143,4 @@
 </script>
 </body>
 </html>
+
